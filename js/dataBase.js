@@ -1,5 +1,5 @@
+
 class DataBase {
-  #localItems;
   constructor() {
     let id = localStorage.getItem("id");
     this._getDate = id || 0;

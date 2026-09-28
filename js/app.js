@@ -5,12 +5,12 @@ import Despesas from "./despesas.js";
 
 let href = window.location.pathname;
 
-view.handleEvent(href, cadastrarDespesa);
 
 // Gravando dados no localStorage
 function cadastrarDespesa(despesa) {
   DataBase.saveDate(despesa);
 }
+view.handleEvent(href, cadastrarDespesa);
 
 window.addEventListener("DOMContentLoaded", () => {
   const d = new Despesas();
