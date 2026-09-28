@@ -1,4 +1,6 @@
+import { state } from "./modal.js";
 import Despesas from "./despesas.js";
+import dataBase from "./dataBase.js";
 class View {
   #parentElementTBody;
   constructor() {
@@ -40,7 +42,7 @@ class View {
         this.modalContainer.innerHTML = "";
         this.renderModal("success", "Concluir");
         this.#showModal();
-        this.#clearForm();
+        // this.#clearForm();
       });
     }
   }
@@ -97,6 +99,7 @@ class View {
     if (!modal) modal = new bootstrap.Modal(modalEl);
 
     modal.show();
+    this.#clearForm();
     return;
   }
   #showModal() {
@@ -110,6 +113,7 @@ class View {
     }
 
     modal.show();
+    this.#clearForm();
     return this;
   }
   #clearForm() {
@@ -123,7 +127,7 @@ class View {
   }
   renderDespesa() {
     const tbody = this.#parentElementTBody;
-    if (!tbody) return [];
+    if (!tbody) return;
 
     tbody.replaceChildren();
 
@@ -144,7 +148,9 @@ class View {
         const despesa = JSON.parse(storedDespesa);
         if (despesa && typeof despesa === "object") despesas.push(despesa);
       } catch {
-        // Ignora registros inválidos para que os demais continuem sendo exibidos.
+        console.log(
+          "Ignora registros inválidos para que os demais continuem sendo exibidos.",
+        );
       }
     }
 
@@ -157,7 +163,7 @@ class View {
       );
       const dataFormatada = Number.isNaN(data.getTime())
         ? ""
-        : data.toLocaleDateString("pt-BR", {
+        : data.toLocaleDateString("pt-PT", {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -193,38 +199,69 @@ class View {
       tr.append(actions);
       tbody.append(tr);
     });
-
-    this.apagar();
-    return despesas;
   }
-  apagar() {
+  editarDespesa() {
+    console.log("editando despesas");
+  }
+  excluirDespesa() {
     this.#parentElementTBody?.addEventListener("click", (e) => {
-      let id = e.target.getAttribute("data-id");
-      if (e.target.textContent === "Excluir") {
-        const btn = e.target.parentElement.parentElement;
-        const excluir = confirm("Deseja Excluir esta despesa");
-        let idItem = localStorage.getItem("id");
-        excluir && btn.remove();
-        const idx = JSON.parse(localStorage.getItem(idItem));
-        for (let i = idItem; i <= idItem; i++) {
-          const data = localStorage.getItem(i);
-          if (data) {
-            const items = JSON.parse(data);
-            items.id === id && excluir && this.removerList(idItem);
-            // this.removerList(i);
+      const button = e.target.closest?.("button[data-btn]");
+      if (!button) return;
+
+      if (button.dataset.btn === "excluir") {
+        const confirmed = confirm("Deseja Excluir esta despesa?");
+        if (!confirmed) return;
+
+        const id = button.dataset.id;
+        const lastId = Number(localStorage.getItem("id")) || 0;
+
+        for (let storageId = 1; storageId <= lastId; storageId += 1) {
+          const data = localStorage.getItem(String(storageId));
+          if (!data) continue;
+
+          try {
+            const despesa = JSON.parse(data);
+            if (String(despesa?.id) !== id) continue;
+
+            this.removerList(storageId);
+            state.idSearch = id;
+            state.despesas.push(despesa);
+            button.closest("tr")?.remove();
+            this.updateState();
+            return;
+          } catch {
+            continue;
           }
         }
+        return;
+      }
+
+      if (button.dataset.btn === "editar") {
+        console.log("Editando");
+        this.editarDespesa();
       }
     });
   }
-
-  removerList(id) {
-    localStorage.removeItem(id);
+  updateState() {
+    console.log("Your State is Updated :", state);
+  }
+  removerList(storageId) {
+    localStorage.removeItem(String(storageId));
   }
   init() {
     this.renderDespesa = this.renderDespesa.bind(this);
-    // this.apagar = this.apagar.bind(this)
+    this.excluirDespesa();
   }
 }
 
 export default new View();
+
+const lista = ["Ana", undefined, null, "marcos", "Fidel"];
+
+for (let i = 0; i < lista.length; i++) {
+  if (lista[i] === null || lista[i] === undefined) {
+    continue;
+  }
+}
+
+console.log(state);
